@@ -67,7 +67,7 @@ namespace Proc
                             //name = length(p.StartInfo.FileName) > 0 ? (p.StartInfo.FileName as string)?.ToUnixPathFromWindowsPath : p.ProcessName,
                             title = p.MainWindowTitle,
                             commandline = p.StartInfo.Arguments,
-                            //bitness = Environment.OSBitness == 32 || IsWOW64(p) ? 32 : 64 
+                            //bitness = Environment.OSBitness == 32 || IsWOW64(p) ? 32 : 64  
                             });
 
                             Console.WriteLine(result.Count);
