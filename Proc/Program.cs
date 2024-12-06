@@ -173,12 +173,9 @@ namespace Proc
             {
                 foreach (ManagementObject obj in searcher.Get())
                 {
-                    Console.WriteLine(obj["CommandLine"]);
-                    return obj["CommandLine"]?.ToString() ?? "Command line not available";
-                    
+                    return obj["CommandLine"]?.ToString() ?? "Command line not available";                    
 
                     //Console.WriteLine($"Process ID: {processId}");
-                    //Console.WriteLine("Available fields:");
                     //foreach (var property in obj.Properties)
                     //{
                     //    Console.WriteLine($"{property.Name}: {property.Value}");
