@@ -25,7 +25,7 @@ namespace Proc
                 using (Process processByName = Process.GetProcessesByName(processOrItsLibraryName)[0])
                 {
                     processId = processByName.Id;
-                    GetCommandLineArgs(processId);
+                    GetCommandLineArgsMOS(processId);
                 }
             }
             else
@@ -33,75 +33,164 @@ namespace Proc
                 //Get process Id by library name 
                 var result = new List<ProcessInfo>();
 
-                //#if ECHOES
                 //foreach (var p in global::System.Diagnostics.Process.GetProcesses())
                 //{
+                //    Console.WriteLine(p.ProcessName);
+                //    Console.WriteLine(p.Id);
+
                 //    result.Add(new ProcessInfo
                 //    {
-                //        pid = p.Id, /*user =, state = split[2],*/
-                //        //name = length(p.StartInfo.FileName) > 0 ? (p.StartInfo.FileName as string)?.ToUnixPathFromWindowsPath : p.ProcessName,
+                //        pid = p.Id,
+                //        name = GetSafeFileName(p) ?? "System process. Access denied",
                 //        title = p.MainWindowTitle,
-                //        commandline = p.StartInfo.Arguments,
+                //        commandline = GetSafeCommandLine(p) ?? "System process. Access denied",
                 //        //bitness = Environment.OSBitness == 32 || IsWOW64(p) ? 32 : 64
-                //    });
+                //    });                    
                 //}
-                //#endif
-                //return result;
 
-                Process process;
-                string name = "";
-                foreach (Process p in Process.GetProcesses())
+                foreach (var p in global::System.Diagnostics.Process.GetProcesses())
                 {
-                    process = p;
-                    name = process.ProcessName;
-                    try
+                    //Console.WriteLine($"Process Name: {p.ProcessName}");
+                    //Console.WriteLine($"Process ID: {p.Id}");
+
+                    var processInfo = new ProcessInfo
                     {
-                        if (process.Modules.Cast<ProcessModule>().Any(m => m.ModuleName.Equals(processOrItsLibraryName, StringComparison.OrdinalIgnoreCase)))
-                        {
-                            processId = process.Id;
-                            Console.WriteLine($"Process: {process.ProcessName}, ID: {processId} uses {processOrItsLibraryName}");
+                        pid = p.Id,
+                        name = GetSafeFileName(p) ?? "System process. Access denied",
+                        title = p.MainWindowTitle,
+                        commandline = GetSafeCommandLine(p) ?? "System process. Access denied",
+                        //bitness = Environment.OSBitness == 32 || IsWOW64(p) ? 32 : 64
+                    };
 
-                            result.Add(new ProcessInfo
-                            { 
-                            pid = p.Id, /*user =, state = split[2],*/
-                            //name = length(p.StartInfo.FileName) > 0 ? (p.StartInfo.FileName as string)?.ToUnixPathFromWindowsPath : p.ProcessName,
-                            title = p.MainWindowTitle,
-                            commandline = p.StartInfo.Arguments,
-                            //bitness = Environment.OSBitness == 32 || IsWOW64(p) ? 32 : 64  
-                            });
+                    // Додаємо до списку
+                    result.Add(processInfo);
 
-                            Console.WriteLine(result.Count);
-                        }
-                            //#endif
-                            //return result;                           
-                        
-                    }
-                    catch (System.ComponentModel.Win32Exception ex) //  when (ex.Message.Contains("Unable to enumerate the process modules"))
-                    {
-                        if (processId < 1)
-                        {
-                            processId = GetProcessIdUsingPsList(name, monitoringToolsPath);
-                        }
-
-                        GetCommandLineArgs(processId);
-
-                        string psListCommand = $"{Path.Combine(monitoringToolsPath, "pslist.exe")} {process.ProcessName} -accepteula";
-                        string listDLLsCommand = $"{Path.Combine(monitoringToolsPath, "ListDLLs.exe")} -p {processId} -accepteula";
-
-                        ExecuteCommand(psListCommand);
-                        ExecuteCommand(listDLLsCommand);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Unable to access process info: {ex.Message} ProcessId: {processId}. Process name: {process}");                       
-                    }
-                    processId = 0;
+                    // Виводимо інформацію про доданий об'єкт
+                    Console.WriteLine($"Added Process Info:");
+                    Console.WriteLine($"PID: {processInfo.pid}");
+                    Console.WriteLine($"Name: {processInfo.name}");
+                    Console.WriteLine($"Title: {processInfo.title}");
+                    Console.WriteLine($"Command Line: {processInfo.commandline}");
+                    Console.WriteLine(new string('-', 50));
                 }
+
+
+                //Process process;
+                //string name = "";
+                //foreach (Process p in Process.GetProcesses())
+                //{
+                //    process = p;
+                //    name = process.ProcessName;
+                //    try
+                //    {
+                //        if (process.Modules.Cast<ProcessModule>().Any(m => m.ModuleName.Equals(processOrItsLibraryName, StringComparison.OrdinalIgnoreCase)))
+                //        {
+                //            processId = process.Id;
+                //            Console.WriteLine($"Process: {process.ProcessName}, ID: {processId} uses {processOrItsLibraryName}");
+
+                //            result.Add(new ProcessInfo
+                //            { 
+                //            pid = p.Id, /*user =, state = split[2],*/
+                //                name = length(p.StartInfo.FileName) > 0 ? (p.StartInfo.FileName as string)?.ToUnixPathFromWindowsPath : p.ProcessName,
+                //                title = p.MainWindowTitle,
+                //            commandline = p.StartInfo.Arguments,
+                //            //bitness = Environment.OSBitness == 32 || IsWOW64(p) ? 32 : 64  
+                //            });
+
+                //            Console.WriteLine(result.Count);
+                //        }
+                //            //#endif
+                //            //return result;                           
+
+                //    }
+                //    catch (System.ComponentModel.Win32Exception ex) //  when (ex.Message.Contains("Unable to enumerate the process modules"))
+                //    {
+                //        if (processId < 1)
+                //        {
+                //            processId = GetProcessIdUsingPsList(name, monitoringToolsPath);
+                //            GetCommandLineArgsMOS(processId);
+                //            string psListCommand = $"{Path.Combine(monitoringToolsPath, "pslist.exe")} {process.ProcessName} -accepteula";
+                //            //string listDLLsCommand = $"{Path.Combine(monitoringToolsPath, "ListDLLs.exe")} -p {processId} -accepteula";
+
+                //            GetSystemProcessInfo(psListCommand);
+                //            //GetSystemProcessInfo(listDLLsCommand);
+                //        }
+                //    }
+                //    catch (Exception ex)
+                //    {
+                //        Console.WriteLine($"Unable to access process info: {ex.Message} ProcessId: {processId}. Process name: {process}");                       
+                //    }
+                //    processId = 0;
+                //}
             }
         }
 
 
-        public static int GetProcessIdUsingPsList(string processName, string monitoringToolsPath)
+        private static string GetSafeFileName(Process process)
+        {
+            try
+            {
+                return !string.IsNullOrEmpty(process.StartInfo.FileName)
+                    ? process.StartInfo.FileName //.ToUnixPathFromWindowsPath()
+                    : process.ProcessName;
+            }
+            catch (Exception ex)
+            {
+                return process.ProcessName;
+            }
+        }
+
+
+        private static string? GetSafeCommandLine(Process process)
+        {
+            var processId = process.Id;
+            try
+            {
+                return process.StartInfo.Arguments;
+            }
+            catch (System.ComponentModel.Win32Exception ex)
+            {
+                return GetCommandLineArgsMOS(processId);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return GetCommandLineArgsMOS(processId);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Unexpected error for Arguments: {ex.Message}");
+            }
+            return "Unexpected error for process Arguments";
+        }
+
+
+
+        private static string GetCommandLineArgsMOS(int processId)
+        {
+            string query = $"SELECT * FROM Win32_Process WHERE ProcessId = {processId}";
+
+            using (var searcher = new ManagementObjectSearcher(query))
+            {
+                foreach (ManagementObject obj in searcher.Get())
+                {
+                    Console.WriteLine(obj["CommandLine"]);
+                    return obj["CommandLine"]?.ToString() ?? "Command line not available";
+                    
+
+                    //Console.WriteLine($"Process ID: {processId}");
+                    //Console.WriteLine("Available fields:");
+                    //foreach (var property in obj.Properties)
+                    //{
+                    //    Console.WriteLine($"{property.Name}: {property.Value}");
+                    //}
+                    //Console.WriteLine(new string('-', 50));
+                }
+            }
+            return "Command line not available";
+        }
+
+
+        private static int GetProcessIdUsingPsList(string processName, string monitoringToolsPath)
         {
             string psListCommand = $"{Path.Combine(monitoringToolsPath, "pslist.exe")} {processName} -accepteula";
             try
@@ -147,32 +236,10 @@ namespace Proc
             }
 
             return -1;
-        }       
-
-
-        public static void GetCommandLineArgs(int processId)
-        {
-            string query = $"SELECT * FROM Win32_Process WHERE ProcessId = {processId}";
-
-            using (var searcher = new ManagementObjectSearcher(query))
-            {
-                foreach (ManagementObject obj in searcher.Get())
-                {
-                    Console.WriteLine($"Process ID: {processId}");
-                    Console.WriteLine("Available fields:");
-
-                    foreach (var property in obj.Properties)
-                    {
-                        Console.WriteLine($"{property.Name}: {property.Value}");
-                    }
-
-                    Console.WriteLine(new string('-', 50));
-                }
-            }
         }
 
 
-        private static void ExecuteCommand(string command)
+        private static void GetSystemProcessInfo(string command)
         {
             try
             {
@@ -203,92 +270,83 @@ namespace Proc
         }
 
 
-        //private static int GetProcessId(Process process)
-        //{
-        //    string query = "SELECT ProcessId, Handle FROM Win32_Process";
-        //    using (var searcher = new ManagementObjectSearcher(query))
-        //    {
-        //        foreach (ManagementObject obj in searcher.Get())
-        //        {
-        //            if (obj["Handle"] != null && Convert.ToInt32(obj["Handle"]) == process.Handle.ToInt32())
-        //            {
-        //                return Convert.ToInt32(obj["ProcessId"]);
-        //            }
-        //        }
-        //    }
-        //    return -1;
-        //}
+        private static int GetProcessId(Process process)
+        {
+            string query = "SELECT ProcessId, Handle FROM Win32_Process";
+            using (var searcher = new ManagementObjectSearcher(query))
+            {
+                foreach (ManagementObject obj in searcher.Get())
+                {
+                    if (obj["Handle"] != null && Convert.ToInt32(obj["Handle"]) == process.Handle.ToInt32())
+                    {
+                        return Convert.ToInt32(obj["ProcessId"]);
+                    }
+                }
+            }
+            return -1;
+        }
 
 
-        //public static void ExecuteSysinternalsTool(string toolPath, string toolName, string arguments)
-        //{
-        //    string fullPath = Path.Combine(toolPath, toolName);
-        //    ProcessStartInfo startInfo = new ProcessStartInfo
-        //    {
-        //        FileName = fullPath,
-        //        Arguments = arguments,
-        //        UseShellExecute = false,
-        //        RedirectStandardOutput = true,
-        //        RedirectStandardError = true,
-        //        CreateNoWindow = true
-        //    };
+        private static void ExecuteSysinternalsTool(string toolPath, string toolName, string arguments)
+        {
+            string fullPath = Path.Combine(toolPath, toolName);
+            ProcessStartInfo startInfo = new ProcessStartInfo
+            {
+                FileName = fullPath,
+                Arguments = arguments,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true
+            };
 
-        //    using (Process process = Process.Start(startInfo))
-        //    {
-        //        using (StreamReader reader = process.StandardOutput)
-        //        {
-        //            string output = reader.ReadToEnd();
-        //            Console.WriteLine(output);
-        //        }
+            using (Process process = Process.Start(startInfo))
+            {
+                using (StreamReader reader = process.StandardOutput)
+                {
+                    string output = reader.ReadToEnd();
+                    Console.WriteLine(output);
+                }
 
-        //        using (StreamReader reader = process.StandardError)
-        //        {
-        //            string errorOutput = reader.ReadToEnd();
-        //            if (!string.IsNullOrEmpty(errorOutput))
-        //            {
-        //                Console.WriteLine($"Error: {errorOutput}");
-        //            }
-        //        }
+                using (StreamReader reader = process.StandardError)
+                {
+                    string errorOutput = reader.ReadToEnd();
+                    if (!string.IsNullOrEmpty(errorOutput))
+                    {
+                        Console.WriteLine($"Error: {errorOutput}");
+                    }
+                }
 
-        //        process.WaitForExit();
-        //    }
-        //}
-
-
+                process.WaitForExit();
+            }
+        }
 
 
+        private static void CopyCurrentProcessProperties()
+        {
+            var currentEnvVars = Environment.GetEnvironmentVariables();
 
+            ProcessStartInfo startInfo = new ProcessStartInfo
+            {
+                FileName = "notepad.exe",
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
 
+            foreach (var key in currentEnvVars.Keys)
+            {
+                startInfo.Environment[key.ToString()] = currentEnvVars[key].ToString();
+            }
 
-
-        //public static void CopyCurrentProcessProperties()
-        //{
-        //    var currentEnvVars = Environment.GetEnvironmentVariables();
-
-        //    ProcessStartInfo startInfo = new ProcessStartInfo
-        //    {
-        //        FileName = "notepad.exe", 
-        //        UseShellExecute = false, 
-        //        CreateNoWindow = true  
-        //    };
-
-        //    // Copy the current environment variables to the new process
-        //    foreach (var key in currentEnvVars.Keys)
-        //    {
-        //        startInfo.Environment[key.ToString()] = currentEnvVars[key].ToString();
-        //    }
-
-        //    try
-        //    {
-        //        // Start the new process with the copied environment variables
-        //        Process newProcess = Process.Start(startInfo);
-        //        Console.WriteLine("Started new process with copied environment variables.");
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Console.WriteLine($"Error starting process: {ex.Message}");
-        //    }
-        //}
-
+            try
+            {
+                Process newProcess = Process.Start(startInfo);
+                Console.WriteLine("Started new process with copied environment variables.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error starting process: {ex.Message}");
+            }
+        }
     }
 }
