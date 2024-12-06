@@ -14,117 +14,41 @@ namespace Proc
             int processId = 0;
 
             //var processOrItsLibraryName = "explorer";
-            var processOrItsLibraryName = "RPCRT4.dll";
-            string monitoringToolsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "ProcessMonitoring", ".\\");
+            //var processOrItsLibraryName = "RPCRT4.dll";
+            //string monitoringToolsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "ProcessMonitoring", ".\\");
 
 
 
-            if (!processOrItsLibraryName.EndsWith(".dll"))
-            {
-                //Get process Id by process name
-                using (Process processByName = Process.GetProcessesByName(processOrItsLibraryName)[0])
-                {
-                    processId = processByName.Id;
-                    GetCommandLineArgsMOS(processId);
-                }
-            }
-            else
-            {
+            //if (!processOrItsLibraryName.EndsWith(".dll"))
+            //{
+            //    //Get process Id by process name
+            //    using (Process processByName = Process.GetProcessesByName(processOrItsLibraryName)[0])
+            //    {
+            //        processId = processByName.Id;
+            //        GetCommandLineArgsMOS(processId);
+            //    }
+            //}
+            //else
+            //{
                 //Get process Id by library name 
                 var result = new List<ProcessInfo>();
 
-                //foreach (var p in global::System.Diagnostics.Process.GetProcesses())
-                //{
-                //    Console.WriteLine(p.ProcessName);
-                //    Console.WriteLine(p.Id);
-
-                //    result.Add(new ProcessInfo
-                //    {
-                //        pid = p.Id,
-                //        name = GetSafeFileName(p) ?? "System process. Access denied",
-                //        title = p.MainWindowTitle,
-                //        commandline = GetSafeCommandLine(p) ?? "System process. Access denied",
-                //        //bitness = Environment.OSBitness == 32 || IsWOW64(p) ? 32 : 64
-                //    });                    
-                //}
-
                 foreach (var p in global::System.Diagnostics.Process.GetProcesses())
                 {
-                    //Console.WriteLine($"Process Name: {p.ProcessName}");
-                    //Console.WriteLine($"Process ID: {p.Id}");
+                    Console.WriteLine(p.ProcessName);
+                    Console.WriteLine(p.Id);
 
-                    var processInfo = new ProcessInfo
+                    result.Add(new ProcessInfo
                     {
                         pid = p.Id,
                         name = GetSafeFileName(p) ?? "System process. Access denied",
                         title = p.MainWindowTitle,
                         commandline = GetSafeCommandLine(p) ?? "System process. Access denied",
                         //bitness = Environment.OSBitness == 32 || IsWOW64(p) ? 32 : 64
-                    };
-
-                    // Додаємо до списку
-                    result.Add(processInfo);
-
-                    // Виводимо інформацію про доданий об'єкт
-                    Console.WriteLine($"Added Process Info:");
-                    Console.WriteLine($"PID: {processInfo.pid}");
-                    Console.WriteLine($"Name: {processInfo.name}");
-                    Console.WriteLine($"Title: {processInfo.title}");
-                    Console.WriteLine($"Command Line: {processInfo.commandline}");
-                    Console.WriteLine(new string('-', 50));
-                }
-
-
-                //Process process;
-                //string name = "";
-                //foreach (Process p in Process.GetProcesses())
-                //{
-                //    process = p;
-                //    name = process.ProcessName;
-                //    try
-                //    {
-                //        if (process.Modules.Cast<ProcessModule>().Any(m => m.ModuleName.Equals(processOrItsLibraryName, StringComparison.OrdinalIgnoreCase)))
-                //        {
-                //            processId = process.Id;
-                //            Console.WriteLine($"Process: {process.ProcessName}, ID: {processId} uses {processOrItsLibraryName}");
-
-                //            result.Add(new ProcessInfo
-                //            { 
-                //            pid = p.Id, /*user =, state = split[2],*/
-                //                name = length(p.StartInfo.FileName) > 0 ? (p.StartInfo.FileName as string)?.ToUnixPathFromWindowsPath : p.ProcessName,
-                //                title = p.MainWindowTitle,
-                //            commandline = p.StartInfo.Arguments,
-                //            //bitness = Environment.OSBitness == 32 || IsWOW64(p) ? 32 : 64  
-                //            });
-
-                //            Console.WriteLine(result.Count);
-                //        }
-                //            //#endif
-                //            //return result;                           
-
-                //    }
-                //    catch (System.ComponentModel.Win32Exception ex) //  when (ex.Message.Contains("Unable to enumerate the process modules"))
-                //    {
-                //        if (processId < 1)
-                //        {
-                //            processId = GetProcessIdUsingPsList(name, monitoringToolsPath);
-                //            GetCommandLineArgsMOS(processId);
-                //            string psListCommand = $"{Path.Combine(monitoringToolsPath, "pslist.exe")} {process.ProcessName} -accepteula";
-                //            //string listDLLsCommand = $"{Path.Combine(monitoringToolsPath, "ListDLLs.exe")} -p {processId} -accepteula";
-
-                //            GetSystemProcessInfo(psListCommand);
-                //            //GetSystemProcessInfo(listDLLsCommand);
-                //        }
-                //    }
-                //    catch (Exception ex)
-                //    {
-                //        Console.WriteLine($"Unable to access process info: {ex.Message} ProcessId: {processId}. Process name: {process}");                       
-                //    }
-                //    processId = 0;
-                //}
-            }
+                    });
+                }                
+            //}
         }
-
 
         private static string GetSafeFileName(Process process)
         {
@@ -147,20 +71,11 @@ namespace Proc
             try
             {
                 return process.StartInfo.Arguments;
-            }
-            catch (System.ComponentModel.Win32Exception ex)
-            {
-                return GetCommandLineArgsMOS(processId);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return GetCommandLineArgsMOS(processId);
-            }
+            }            
             catch (Exception ex)
             {
-                Console.WriteLine($"Unexpected error for Arguments: {ex.Message}");
+                return GetCommandLineArgsMOS(processId);
             }
-            return "Unexpected error for process Arguments";
         }
 
 
@@ -174,18 +89,10 @@ namespace Proc
                 foreach (ManagementObject obj in searcher.Get())
                 {
                     return obj["CommandLine"]?.ToString() ?? "Command line not available";                    
-
-                    //Console.WriteLine($"Process ID: {processId}");
-                    //foreach (var property in obj.Properties)
-                    //{
-                    //    Console.WriteLine($"{property.Name}: {property.Value}");
-                    //}
-                    //Console.WriteLine(new string('-', 50));
                 }
             }
             return "Command line not available";
         }
-
 
         private static int GetProcessIdUsingPsList(string processName, string monitoringToolsPath)
         {
@@ -344,6 +251,91 @@ namespace Proc
             {
                 Console.WriteLine($"Error starting process: {ex.Message}");
             }
+
+
+
+
+            //foreach (var p in global::System.Diagnostics.Process.GetProcesses())
+            //{
+            //    //Console.WriteLine($"Process Name: {p.ProcessName}");
+            //    //Console.WriteLine($"Process ID: {p.Id}");
+
+            //    var processInfo = new ProcessInfo
+            //    {
+            //        pid = p.Id,
+            //        name = GetSafeFileName(p) ?? "System process. Access denied",
+            //        title = p.MainWindowTitle,
+            //        commandline = GetSafeCommandLine(p) ?? "System process. Access denied",
+            //        //bitness = Environment.OSBitness == 32 || IsWOW64(p) ? 32 : 64
+            //    };
+
+            //    // Додаємо до списку
+            //    result.Add(processInfo);
+
+            //    // Виводимо інформацію про доданий об'єкт
+            //    Console.WriteLine($"Added Process Info:");
+            //    Console.WriteLine($"PID: {processInfo.pid}");
+            //    Console.WriteLine($"Name: {processInfo.name}");
+            //    Console.WriteLine($"Title: {processInfo.title}");
+            //    Console.WriteLine($"Command Line: {processInfo.commandline}");
+            //    Console.WriteLine(new string('-', 50));
+            //}
+            //Process process;
+            //string name = "";
+            //foreach (Process p in Process.GetProcesses())
+            //{
+            //    process = p;
+            //    name = process.ProcessName;
+            //    try
+            //    {
+            //        if (process.Modules.Cast<ProcessModule>().Any(m => m.ModuleName.Equals(processOrItsLibraryName, StringComparison.OrdinalIgnoreCase)))
+            //        {
+            //            processId = process.Id;
+            //            Console.WriteLine($"Process: {process.ProcessName}, ID: {processId} uses {processOrItsLibraryName}");
+
+            //            result.Add(new ProcessInfo
+            //            { 
+            //            pid = p.Id, /*user =, state = split[2],*/
+            //                name = length(p.StartInfo.FileName) > 0 ? (p.StartInfo.FileName as string)?.ToUnixPathFromWindowsPath : p.ProcessName,
+            //                title = p.MainWindowTitle,
+            //            commandline = p.StartInfo.Arguments,
+            //            //bitness = Environment.OSBitness == 32 || IsWOW64(p) ? 32 : 64  
+            //            });
+
+            //            Console.WriteLine(result.Count);
+            //        }
+            //            //#endif
+            //            //return result;                           
+
+            //    }
+            //    catch (System.ComponentModel.Win32Exception ex) //  when (ex.Message.Contains("Unable to enumerate the process modules"))
+            //    {
+            //        if (processId < 1)
+            //        {
+            //            processId = GetProcessIdUsingPsList(name, monitoringToolsPath);
+            //            GetCommandLineArgsMOS(processId);
+            //            string psListCommand = $"{Path.Combine(monitoringToolsPath, "pslist.exe")} {process.ProcessName} -accepteula";
+            //            //string listDLLsCommand = $"{Path.Combine(monitoringToolsPath, "ListDLLs.exe")} -p {processId} -accepteula";
+
+            //            GetSystemProcessInfo(psListCommand);
+            //            //GetSystemProcessInfo(listDLLsCommand);
+            //        }
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        Console.WriteLine($"Unable to access process info: {ex.Message} ProcessId: {processId}. Process name: {process}");                       
+            //    }
+            //    processId = 0;
+            //}
+
+
+
+            //Console.WriteLine($"Process ID: {processId}");
+            //foreach (var property in obj.Properties)
+            //{
+            //    Console.WriteLine($"{property.Name}: {property.Value}");
+            //}
+            //Console.WriteLine(new string('-', 50));
         }
     }
 }
